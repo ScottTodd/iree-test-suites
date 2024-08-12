@@ -23,8 +23,7 @@ ONNX_CONVERTER_OUTPUT_MIN_VERSION = 17
 
 # Write generated files to a subfolder.
 THIS_DIR = Path(__file__).parent
-GENERATED_FILES_OUTPUT_ROOT = THIS_DIR / "generated"
-GENERATED_ONNX_FILES_ROOT = GENERATED_FILES_OUTPUT_ROOT / "onnx"
+GENERATED_FILES_OUTPUT_ROOT = THIS_DIR / "onnx/node/generated"
 IMPORT_SUCCESSES_FILE_PATH = GENERATED_FILES_OUTPUT_ROOT / "import_successes.txt"
 IMPORT_FAILURES_FILE_PATH = GENERATED_FILES_OUTPUT_ROOT / "import_failures.txt"
 
@@ -37,7 +36,7 @@ def find_onnx_tests(root_dir_path: Path):
 
 def import_onnx_files_with_cleanup(test_dir_path: Path):
     test_name = test_dir_path.name
-    imported_dir_path = Path(GENERATED_ONNX_FILES_ROOT) / test_name
+    imported_dir_path = Path(GENERATED_FILES_OUTPUT_ROOT) / test_name
     result = import_onnx_files(test_dir_path, imported_dir_path)
     if not result:
         # Note: could comment this out to keep partially imported directories.
@@ -165,13 +164,13 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    test_dir_paths = find_onnx_tests(ONNX_NODE_TESTS_ROOT)
-
+    if not GENERATED_FILES_OUTPUT_ROOT.is_dir():
+        GENERATED_FILES_OUTPUT_ROOT.mkdir(parents=True)
     # TODO(scotttodd): add flag to not clear output dir?
     print(f"Clearing old generated files from '{GENERATED_FILES_OUTPUT_ROOT}'")
     shutil.rmtree(GENERATED_FILES_OUTPUT_ROOT)
-    GENERATED_FILES_OUTPUT_ROOT.mkdir(parents=True)
 
+    test_dir_paths = find_onnx_tests(ONNX_NODE_TESTS_ROOT)
     print(f"Importing tests in '{ONNX_NODE_TESTS_ROOT}'")
     print("******************************************************************")
     passed_imports = []
