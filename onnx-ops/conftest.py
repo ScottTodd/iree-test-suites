@@ -23,7 +23,7 @@ TEST_DATA_FLAGFILE_NAME = "run_module_io_flags.txt"
 
 
 def pytest_addoption(parser):
-    # List of configuration files following this schema:
+    # A configuration file following this schema:
     #   {
     #     "config_name": str,
     #     "iree_compile_flags": list of str,
@@ -45,25 +45,19 @@ def pytest_addoption(parser):
     #     "expected_run_failures": ["test_add"],
     #   }
     #
-    # The list of files can be specified in (by order of preference):
-    #   1. The `--config-files` argument
-    #       e.g. `pytest ... --config-files foo.json bar.json`
-    #   2. The `IREE_TEST_CONFIG_FILES` environment variable
-    #       e.g. `set IREE_TEST_CONFIG_FILES=foo.json;bar.json`
+    # The config file can be specified in (by order of preference):
+    #   1. The `--iree-tests-config-file` argument
+    #       e.g. `pytest ... --iree-tests-config-file foo.json`
+    #   2. The `IREE_TESTS_CONFIG_FILE` environment variable
+    #       e.g. `set IREE_TESTS_CONFIG_FILE=foo.json`
     #   3. A default config file used for testing the test suite itself
-    default_config_files = [
-        f for f in os.getenv("IREE_TEST_CONFIG_FILES", "").split(";") if f
-    ]
-    if not default_config_files:
-        default_config_files = [
-            THIS_DIR / "configs" / "onnx_ops_cpu_llvm_sync.json",
-        ]
+    default_config_file = os.getenv("IREE_TESTS_CONFIG_FILE", "")
+    if not default_config_file:
+        default_config_file = THIS_DIR / "configs" / "onnx_ops_cpu_llvm_sync.json"
     parser.addoption(
-        "--config-files",
-        action="store",
-        nargs="*",
-        default=default_config_files,
-        help="List of config JSON files used to build test cases",
+        "--iree-tests-config-file",
+        default=default_config_file,
+        help="Config JSON file used to build test cases",
     )
 
     parser.addoption(
@@ -81,35 +75,35 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_sessionstart(session):
-    session.config.iree_test_configs = []
-    for config_file in session.config.getoption("config_files"):
-        with open(config_file) as f:
-            test_config = pyjson5.load(f)
+# def pytest_sessionstart(session):
+#     session.config.iree_test_configs = []
+#     for config_file in session.config.getoption("config_files"):
+#         with open(config_file) as f:
+#             test_config = pyjson5.load(f)
 
-            # Sanity check the config file structure before going any further.
-            def check_field(field_name):
-                if field_name not in test_config:
-                    raise ValueError(
-                        f"config file '{config_file}' is missing a '{field_name}' field"
-                    )
+#             # Sanity check the config file structure before going any further.
+#             def check_field(field_name):
+#                 if field_name not in test_config:
+#                     raise ValueError(
+#                         f"config file '{config_file}' is missing a '{field_name}' field"
+#                     )
 
-            check_field("config_name")
-            check_field("iree_compile_flags")
-            check_field("iree_run_module_flags")
+#             check_field("config_name")
+#             check_field("iree_compile_flags")
+#             check_field("iree_run_module_flags")
 
-            session.config.iree_test_configs.append(test_config)
+#             session.config.iree_test_configs.append(test_config)
 
 
-def pytest_collect_file(parent, file_path):
-    if file_path.name == TEST_DATA_FLAGFILE_NAME:
-        return MlirCompileRunTest.from_parent(parent, path=file_path)
+# def pytest_collect_file(parent, file_path):
+#     if file_path.name == TEST_DATA_FLAGFILE_NAME:
+#         return MlirCompileRunTest.from_parent(parent, path=file_path)
 
-    if file_path.suffix == ".json":
-        with open(file_path) as f:
-            test_cases_json = pyjson5.load(f)
-            if test_cases_json.get("file_format", "") == "test_cases_v0":
-                return MlirCompileRunTest.from_parent(parent, path=file_path)
+#     if file_path.suffix == ".json":
+#         with open(file_path) as f:
+#             test_cases_json = pyjson5.load(f)
+#             if test_cases_json.get("file_format", "") == "test_cases_v0":
+#                 return MlirCompileRunTest.from_parent(parent, path=file_path)
 
 
 # --------------------------------------------------------------------------- #
@@ -428,3 +422,146 @@ class IreeRunException(Exception):
 
 class IreeXFailCompileRunException(Exception):
     pass
+
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+
+# https://stackoverflow.com/q/33508060
+
+# TODO(scotttodd): depend on another fixture that provides the session?
+# TODO(scotttodd): load config with flags to use
+# TODO(scotttodd): parameterize test on configs (or single config?)
+
+
+@pytest.fixture(scope="session")
+def iree_compile_run_config(request):
+    config_file = request.config.getoption("iree_tests_config_file")
+    with open(config_file) as f:
+        test_config = pyjson5.load(f)
+
+        # Sanity check the config file structure before going any further.
+        def check_field(field_name):
+            if field_name not in test_config:
+                raise ValueError(
+                    f"config file '{config_file}' is missing a '{field_name}' field"
+                )
+
+        check_field("config_name")
+        check_field("iree_compile_flags")
+        check_field("iree_run_module_flags")
+
+        return test_config
+
+
+class Helpers:
+    @staticmethod
+    def test_compile_and_run(cwd, input_program, io_flagfile):
+        print(
+            f"compile_and_run helper called with:\n  {cwd}\n  {input_program}\n  {io_flagfile}"
+        )
+        pass
+
+
+@pytest.fixture
+def helpers():
+    return Helpers
+
+
+# @pytest.fixture
+# def get_iree_markers(request, iree_compile_run_config):
+#     ignore_xfails = request.config.getoption("ignore_xfails")
+#     skip_all_runs = request.config.getoption("skip_all_runs")
+
+
+@pytest.fixture
+def test_iree_compile_and_run(request, iree_compile_run_config):
+    iree_config = iree_compile_run_config
+    config_name = iree_config.get("config_name")
+    compile_flags = iree_config.get("iree_compile_flags")
+    run_module_flags = iree_config.get("iree_run_module_flags")
+
+    ignore_xfails = request.config.getoption("ignore_xfails")
+    skip_all_runs = request.config.getoption("skip_all_runs")
+
+    def run_test_fn(test_file, input_program, io_flagfile):
+        cwd = Path(test_file).parent
+        relative_test_directory = cwd.relative_to(THIS_DIR).as_posix()
+        input_program_stem = Path(input_program).stem
+
+        vmfb_name = f"{input_program_stem}_{config_name}.vmfb"
+
+        # Command for iree-compile.
+        compile_args = ["iree-compile", input_program]
+        compile_args.extend(compile_flags)
+        compile_args.extend(["-o", vmfb_name])
+        compile_cmd = subprocess.list2cmdline(compile_args)
+
+        # Command for iree-run-module.
+        run_args = ["iree-run-module", f"--module={vmfb_name}"]
+        run_args.extend(run_module_flags)
+        run_args.append(f"--flagfile={io_flagfile}")
+        run_cmd = subprocess.list2cmdline(run_args)
+
+        expect_compile_success = (
+            ignore_xfails
+            or relative_test_directory
+            not in iree_config.get("expected_compile_failures", [])
+        )
+        expect_run_success = (
+            ignore_xfails
+            or relative_test_directory
+            not in iree_config.get("expected_run_failures", [])
+        )
+        skip_compile = relative_test_directory in iree_config.get(
+            "skip_compile_tests", []
+        )
+        skip_run = skip_all_runs or relative_test_directory in iree_config.get(
+            "skip_run_tests", []
+        )
+
+        print(f"expect_compile_success: {expect_compile_success}")
+        print(f"expect_run_success: {expect_run_success}")
+        print(f"skip_compile: {skip_compile}")
+        print(f"skip_run: {skip_run}")
+        # if not expect_compile_success:
+        #     self.add_marker(
+        #         pytest.mark.xfail(
+        #             raises=IreeCompileException,
+        #             strict=True,
+        #             reason="Expected compilation to fail (included in 'expected_compile_failures')",
+        #         )
+        #     )
+        # if not self.spec.expect_run_success:
+        #     self.add_marker(
+        #         pytest.mark.xfail(
+        #             raises=IreeRunException,
+        #             strict=True,
+        #             reason="Expected run to fail (included in 'expected_run_failures')",
+        #         )
+        #     )
+
+        logging.getLogger().info(
+            f"Launching compile command:\n"  #
+            f"  cd {cwd} && {compile_cmd}"
+        )
+        proc = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)
+        if proc.returncode != 0:
+            raise IreeCompileException(proc, cwd, compile_cmd)
+
+        logging.getLogger().info(
+            f"Launching run command:\n"  #
+            f"  cd {cwd} && {run_cmd}"
+        )
+        proc = subprocess.run(run_cmd, shell=True, capture_output=True, cwd=cwd)
+        if proc.returncode != 0:
+            raise IreeRunException(proc, cwd, compile_cmd, run_cmd)
+
+    return run_test_fn
