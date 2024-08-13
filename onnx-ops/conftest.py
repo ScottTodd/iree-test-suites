@@ -480,6 +480,27 @@ def helpers():
 #     ignore_xfails = request.config.getoption("ignore_xfails")
 #     skip_all_runs = request.config.getoption("skip_all_runs")
 
+#     def get_markers_fn(test_file):
+#         cwd = Path(test_file).parent
+#         relative_test_directory = cwd.relative_to(THIS_DIR).as_posix()
+
+#         expect_compile_success = (
+#             ignore_xfails
+#             or relative_test_directory
+#             not in iree_config.get("expected_compile_failures", [])
+#         )
+#         expect_run_success = (
+#             ignore_xfails
+#             or relative_test_directory
+#             not in iree_config.get("expected_run_failures", [])
+#         )
+#         skip_compile = relative_test_directory in iree_config.get(
+#             "skip_compile_tests", []
+#         )
+#         skip_run = skip_all_runs or relative_test_directory in iree_config.get(
+#             "skip_run_tests", []
+#         )
+
 
 @pytest.fixture
 def test_iree_compile_and_run(request, iree_compile_run_config):
@@ -565,3 +586,13 @@ def test_iree_compile_and_run(request, iree_compile_run_config):
             raise IreeRunException(proc, cwd, compile_cmd, run_cmd)
 
     return run_test_fn
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        logging.getLogger().info(f"collection item: '{item}'")
+        logging.getLogger().info(f"  nodeid: '{item.nodeid}'")
+        logging.getLogger().info(f"  parent: '{item.parent}'")
+        logging.getLogger().info(f"  parent name: '{item.parent.name}'")
+        logging.getLogger().info(f"  parent nodeid: '{item.parent.nodeid}'")
+        # help(item)
