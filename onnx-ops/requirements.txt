@@ -2,6 +2,7 @@
 # See requirements-dev.txt for extra dependencies used to regenerate test cases.
 pyjson5
 pytest
+pytest-dependency
 pytest-reportlog
 pytest-retry
 pytest-timeout

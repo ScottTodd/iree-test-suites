@@ -657,3 +657,72 @@ def pytest_collection_modifyitems(config, items):
                     reason="Expected run to fail (included in 'expected_run_failures')",
                 )
             )
+
+
+@pytest.fixture
+def test_iree_compile(request, iree_compile_run_config):
+    iree_config = iree_compile_run_config
+    config_name = iree_config.get("config_name")
+    compile_flags = iree_config.get("iree_compile_flags")
+
+    def run_test_fn(test_file, input_program):
+        print("test_iree_compile")
+
+        cwd = Path(test_file).parent
+        # relative_test_directory = cwd.relative_to(THIS_DIR).as_posix()
+        input_program_stem = Path(input_program).stem
+
+        vmfb_name = f"{input_program_stem}_{config_name}.vmfb"
+
+        # Command for iree-compile.
+        compile_args = ["iree-compile", input_program]
+        compile_args.extend(compile_flags)
+        compile_args.extend(["-o", vmfb_name])
+        compile_cmd = subprocess.list2cmdline(compile_args)
+
+        logging.getLogger().info(
+            f"Launching compile command:\n"  #
+            f"  cd {cwd} && {compile_cmd}"
+        )
+        proc = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)
+        if proc.returncode != 0:
+            logging.getLogger().info("Raising IreeCompileException")
+            raise IreeCompileException(proc, cwd, compile_cmd)
+
+        return vmfb_name
+
+    return run_test_fn
+
+
+@pytest.fixture
+def test_iree_run_module(request, iree_compile_run_config):
+    iree_config = iree_compile_run_config
+    run_module_flags = iree_config.get("iree_run_module_flags")
+
+    def run_test_fn(test_file, compiled_model, io_flagfile):
+        print(f"test_iree_run_module, compiled_model: '{compiled_model}'")
+
+        cwd = Path(test_file).parent
+
+        # Command for iree-run-module.
+        run_args = ["iree-run-module", f"--module={compiled_model}"]
+        run_args.extend(run_module_flags)
+        run_args.append(f"--flagfile={io_flagfile}")
+        run_cmd = subprocess.list2cmdline(run_args)
+
+        # try:
+        logging.getLogger().info(
+            f"Launching run command:\n"  #
+            f"  cd {cwd} && {run_cmd}"
+        )
+        proc = subprocess.run(run_cmd, shell=True, capture_output=True, cwd=cwd)
+        if proc.returncode != 0:
+            logging.getLogger().info("Raising IreeRunException")
+            # raise IreeRunException(proc, cwd, compile_cmd, run_cmd)
+            raise IreeRunException(proc, cwd, run_cmd, run_cmd)
+        # except IreeRunException as e:
+        #     if not expect_compile_success:
+        #         raise IreeXFailCompileRunException from e
+        #     raise e
+
+    return run_test_fn
