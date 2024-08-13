@@ -6,6 +6,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from pytest_dependency import DependencyManager
 from typing import List
 import logging
 import pyjson5
@@ -627,36 +628,60 @@ def pytest_collection_modifyitems(config, items):
     if ignore_xfails:
         return
 
+    # https://stackoverflow.com/a/53548111
+    modules = (item.getparent(pytest.Module) for item in items)
+    for module in modules:
+        # logging.getLogger().info(f"dependencyManager: {module.dependencyManager}")
+        # help(module)
+        pass
+
     for item in items:
         test_dir_name = Path(item.parent.nodeid).parent.as_posix()
+        # help(item)
+        # logging.getLogger().info(f"item.name: '{item.name}'")
+        # logging.getLogger().info(f"item.nodeid: '{item.nodeid}'")
+        # logging.getLogger().info(f"item.parent.nodeid: '{item.parent.nodeid}'")
+        # logging.getLogger().info(f"test_dir_name: '{test_dir_name}'")
 
-        skip_compile = test_dir_name in skip_compile_tests
-        if skip_compile:
-            item.add_marker(pytest.mark.skip("Included in 'skip_compile_tests'"))
+        if item.name == "test_compile":
+            skip_compile = test_dir_name in skip_compile_tests
+            if skip_compile:
+                item.add_marker(pytest.mark.skip("Included in 'skip_compile_tests'"))
 
-        expect_compile_success = test_dir_name not in expected_compile_failures
-
-        if not expect_compile_success:
-            item.add_marker(
-                pytest.mark.xfail(
-                    raises=IreeCompileException,
-                    strict=True,
-                    reason="Expected compilation to fail (included in 'expected_compile_failures')",
+            expect_compile_success = test_dir_name not in expected_compile_failures
+            if not expect_compile_success:
+                item.add_marker(
+                    pytest.mark.xfail(
+                        raises=IreeCompileException,
+                        strict=True,
+                        reason="Expected compilation to fail (included in 'expected_compile_failures')",
+                    )
                 )
-            )
+        if item.name == "test_run":
+            if skip_all_runs:
+                item.add_marker(pytest.mark.skip("All runs are skipped"))
 
-        if skip_all_runs:
-            continue
-
-        expect_run_success = test_dir_name not in expected_run_failures
-        if not expect_run_success:
-            item.add_marker(
-                pytest.mark.xfail(
-                    raises=IreeRunException,
-                    strict=True,
-                    reason="Expected run to fail (included in 'expected_run_failures')",
+            expect_run_success = test_dir_name not in expected_run_failures
+            if not expect_run_success:
+                item.add_marker(
+                    pytest.mark.xfail(
+                        raises=IreeRunException,
+                        strict=True,
+                        reason="Expected run to fail (included in 'expected_run_failures')",
+                    )
                 )
-            )
+
+
+# TODO(scotttodd): allow running test_run if test_compile is XPASS
+# https://stackoverflow.com/a/53548111
+# class FailureDepManager(DependencyManager):
+
+#     def checkDepend(self, depends, item):
+#         for i in depends:
+#             if i in self.results:
+#                 if self.results[i].isSuccess():
+#                     pytest.skip('%s depends on failures in %s' % (item.name, i))
+#                     break
 
 
 @pytest.fixture

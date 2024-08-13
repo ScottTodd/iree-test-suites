@@ -492,6 +492,7 @@
     "generated/onnx/test_unique_sorted_with_axis_3d",
     "generated/onnx/test_unique_sorted_with_negative_axis",
     "generated/onnx/test_unique_sorted_without_axis",
+    "generated/onnx/test_pow",
     "generated/onnx/test_wrap_pad"
   ],
   "expected_run_failures": [
@@ -515,7 +516,7 @@
     "generated/onnx/test_mod_mixed_sign_int64",
     "generated/onnx/test_mod_mixed_sign_int8",
     "generated/onnx/test_mod_uint64",
-    "generated/onnx/test_pow",
+    // "generated/onnx/test_pow",
     "generated/onnx/test_pow_example",
     "generated/onnx/test_pow_types_float32_int32",
     "generated/onnx/test_pow_types_float32_int64",
