@@ -75,24 +75,40 @@ def pytest_addoption(parser):
     )
 
 
-# def pytest_sessionstart(session):
-#     session.config.iree_test_configs = []
-#     for config_file in session.config.getoption("config_files"):
-#         with open(config_file) as f:
-#             test_config = pyjson5.load(f)
+def pytest_sessionstart(session):
+    # session.config.iree_test_configs = []
+    # for config_file in session.config.getoption("config_files"):
+    #     with open(config_file) as f:
+    #         test_config = pyjson5.load(f)
 
-#             # Sanity check the config file structure before going any further.
-#             def check_field(field_name):
-#                 if field_name not in test_config:
-#                     raise ValueError(
-#                         f"config file '{config_file}' is missing a '{field_name}' field"
-#                     )
+    #         # Sanity check the config file structure before going any further.
+    #         def check_field(field_name):
+    #             if field_name not in test_config:
+    #                 raise ValueError(
+    #                     f"config file '{config_file}' is missing a '{field_name}' field"
+    #                 )
 
-#             check_field("config_name")
-#             check_field("iree_compile_flags")
-#             check_field("iree_run_module_flags")
+    #         check_field("config_name")
+    #         check_field("iree_compile_flags")
+    #         check_field("iree_run_module_flags")
 
-#             session.config.iree_test_configs.append(test_config)
+    #         session.config.iree_test_configs.append(test_config)
+    config_file = session.config.getoption("iree_tests_config_file")
+    with open(config_file) as f:
+        test_config = pyjson5.load(f)
+
+        # Sanity check the config file structure before going any further.
+        def check_field(field_name):
+            if field_name not in test_config:
+                raise ValueError(
+                    f"config file '{config_file}' is missing a '{field_name}' field"
+                )
+
+        check_field("config_name")
+        check_field("iree_compile_flags")
+        check_field("iree_run_module_flags")
+
+        session.config.iree_test_config = test_config
 
 
 # def pytest_collect_file(parent, file_path):
@@ -443,22 +459,23 @@ class IreeXFailCompileRunException(Exception):
 
 @pytest.fixture(scope="session")
 def iree_compile_run_config(request):
-    config_file = request.config.getoption("iree_tests_config_file")
-    with open(config_file) as f:
-        test_config = pyjson5.load(f)
+    return request.config.iree_test_config
+    # config_file = request.config.getoption("iree_tests_config_file")
+    # with open(config_file) as f:
+    #     test_config = pyjson5.load(f)
 
-        # Sanity check the config file structure before going any further.
-        def check_field(field_name):
-            if field_name not in test_config:
-                raise ValueError(
-                    f"config file '{config_file}' is missing a '{field_name}' field"
-                )
+    #     # Sanity check the config file structure before going any further.
+    #     def check_field(field_name):
+    #         if field_name not in test_config:
+    #             raise ValueError(
+    #                 f"config file '{config_file}' is missing a '{field_name}' field"
+    #             )
 
-        check_field("config_name")
-        check_field("iree_compile_flags")
-        check_field("iree_run_module_flags")
+    #     check_field("config_name")
+    #     check_field("iree_compile_flags")
+    #     check_field("iree_run_module_flags")
 
-        return test_config
+    #     return test_config
 
 
 class Helpers:
@@ -536,22 +553,22 @@ def test_iree_compile_and_run(request, iree_compile_run_config):
             or relative_test_directory
             not in iree_config.get("expected_compile_failures", [])
         )
-        expect_run_success = (
-            ignore_xfails
-            or relative_test_directory
-            not in iree_config.get("expected_run_failures", [])
-        )
-        skip_compile = relative_test_directory in iree_config.get(
-            "skip_compile_tests", []
-        )
+        # expect_run_success = (
+        #     ignore_xfails
+        #     or relative_test_directory
+        #     not in iree_config.get("expected_run_failures", [])
+        # )
+        # skip_compile = relative_test_directory in iree_config.get(
+        #     "skip_compile_tests", []
+        # )
         skip_run = skip_all_runs or relative_test_directory in iree_config.get(
             "skip_run_tests", []
         )
 
-        print(f"expect_compile_success: {expect_compile_success}")
-        print(f"expect_run_success: {expect_run_success}")
-        print(f"skip_compile: {skip_compile}")
-        print(f"skip_run: {skip_run}")
+        # print(f"expect_compile_success: {expect_compile_success}")
+        # print(f"expect_run_success: {expect_run_success}")
+        # print(f"skip_compile: {skip_compile}")
+        # print(f"skip_run: {skip_run}")
         # if not expect_compile_success:
         #     self.add_marker(
         #         pytest.mark.xfail(
@@ -575,24 +592,68 @@ def test_iree_compile_and_run(request, iree_compile_run_config):
         )
         proc = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)
         if proc.returncode != 0:
+            logging.getLogger().info("Raising IreeCompileException")
             raise IreeCompileException(proc, cwd, compile_cmd)
 
-        logging.getLogger().info(
-            f"Launching run command:\n"  #
-            f"  cd {cwd} && {run_cmd}"
-        )
-        proc = subprocess.run(run_cmd, shell=True, capture_output=True, cwd=cwd)
-        if proc.returncode != 0:
-            raise IreeRunException(proc, cwd, compile_cmd, run_cmd)
+        if skip_run:
+            return
+
+        try:
+            logging.getLogger().info(
+                f"Launching run command:\n"  #
+                f"  cd {cwd} && {run_cmd}"
+            )
+            proc = subprocess.run(run_cmd, shell=True, capture_output=True, cwd=cwd)
+            if proc.returncode != 0:
+                logging.getLogger().info("Raising IreeRunException")
+                raise IreeRunException(proc, cwd, compile_cmd, run_cmd)
+        except IreeRunException as e:
+            if not expect_compile_success:
+                raise IreeXFailCompileRunException from e
+            raise e
 
     return run_test_fn
 
 
-def pytest_collection_modifyitems(items):
+def pytest_collection_modifyitems(config, items):
+    iree_test_config = config.iree_test_config
+    ignore_xfails = config.getoption("ignore_xfails")
+    skip_all_runs = config.getoption("skip_all_runs")
+    expected_compile_failures = iree_test_config.get("expected_compile_failures", [])
+    expected_run_failures = iree_test_config.get("expected_run_failures", [])
+    skip_compile_tests = iree_test_config.get("skip_compile_tests", [])
+    # skip_run_tests = iree_test_config.get("skip_run_tests", [])
+
+    if ignore_xfails:
+        return
+
     for item in items:
-        logging.getLogger().info(f"collection item: '{item}'")
-        logging.getLogger().info(f"  nodeid: '{item.nodeid}'")
-        logging.getLogger().info(f"  parent: '{item.parent}'")
-        logging.getLogger().info(f"  parent name: '{item.parent.name}'")
-        logging.getLogger().info(f"  parent nodeid: '{item.parent.nodeid}'")
-        # help(item)
+        test_dir_name = Path(item.parent.nodeid).parent.as_posix()
+
+        skip_compile = test_dir_name in skip_compile_tests
+        if skip_compile:
+            item.add_marker(pytest.mark.skip("Included in 'skip_compile_tests'"))
+
+        expect_compile_success = test_dir_name not in expected_compile_failures
+
+        if not expect_compile_success:
+            item.add_marker(
+                pytest.mark.xfail(
+                    raises=IreeCompileException,
+                    strict=True,
+                    reason="Expected compilation to fail (included in 'expected_compile_failures')",
+                )
+            )
+
+        if skip_all_runs:
+            continue
+
+        expect_run_success = test_dir_name not in expected_run_failures
+        if not expect_run_success:
+            item.add_marker(
+                pytest.mark.xfail(
+                    raises=IreeRunException,
+                    strict=True,
+                    reason="Expected run to fail (included in 'expected_run_failures')",
+                )
+            )
