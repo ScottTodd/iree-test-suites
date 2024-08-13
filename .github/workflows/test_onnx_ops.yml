@@ -55,7 +55,7 @@ jobs:
             -rA \
             --timeout=30 \
             --durations=10 \
-            --report-log=/tmp/onnx_ops_cpu_logs \
+            --report-log=/tmp/onnx_ops_cpu_logs.json \
             --config-files=${CONFIG_FILE_PATH}
       - name: "Updating config file with latest XFAIL lists"
         if: failure()

@@ -5,6 +5,5 @@
 pyjson5
 pytest
 pytest-reportlog
-pytest-retry
 pytest-timeout
 pytest-xdist
