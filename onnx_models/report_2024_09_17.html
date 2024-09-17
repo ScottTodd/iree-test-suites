@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">report.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
+  </head>
+  <body>
+    <h1 id="title">report.html</h1>
+    <p>Report generated on 17-Sep-2024 at 15:24:34 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.1.1</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</th>
+        </tr>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left"><</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">></div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">15 tests took 00:01:34.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled/>
+            <span class="failed">0 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" />
+            <span class="passed">11 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled/>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" />
+            <span class="xfailed">4 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled/>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled/>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled/>
+            <span class="rerun">0 Reruns</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  </body>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.11.2&#34;, &#34;Platform&#34;: &#34;Windows-10-10.0.19045-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;8.3.3&#34;, &#34;pluggy&#34;: &#34;1.5.0&#34;}, &#34;Plugins&#34;: {&#34;html&#34;: &#34;4.1.1&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;reportlog&#34;: &#34;0.4.0&#34;, &#34;timeout&#34;: &#34;2.3.1&#34;, &#34;xdist&#34;: &#34;3.6.1&#34;}, &#34;PLATFORM&#34;: &#34;x64&#34;, &#34;JAVA_HOME&#34;: &#34;D:\\dev\\sdks\\Java\\jdk1.8.0_251&#34;}, &#34;tests&#34;: {&#34;tests/vision/classification_models_test.py::test_alexnet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_alexnet&#34;, &#34;duration&#34;: &#34;00:00:10&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_alexnet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:10&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\bvlcalexnet-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\bvlcalexnet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\bvlcalexnet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\bvlcalexnet-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\bvlcalexnet-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\bvlcalexnet-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\bvlcalexnet-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\bvlcalexnet-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\bvlcalexnet-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\bvlcalexnet-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_caffenet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_caffenet&#34;, &#34;duration&#34;: &#34;00:00:10&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_caffenet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:10&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\caffenet-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\caffenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\caffenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\caffenet-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\caffenet-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\caffenet-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\caffenet-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\caffenet-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\caffenet-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\caffenet-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_densenet_121&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_densenet_121&#34;, &#34;duration&#34;: &#34;00:00:12&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_densenet_121&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:12&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\densenet-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\densenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\densenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\densenet-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\densenet-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\densenet-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\densenet-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\densenet-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\densenet-12_version17_input_0.bin --expected_output=1x1000x1x1xf32=@artifacts\\vision\\classification\\densenet-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_efficientnet_lite4&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_efficientnet_lite4&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_efficientnet_lite4&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;compare_between_iree_and_onnxruntime = &amp;lt;function compare_between_iree_and_onnxruntime_fn at 0x000001F6E071A980&amp;gt;\n\n    @pytest.mark.xfail(raises=IreeCompileException)\n    def test_efficientnet_lite4(compare_between_iree_and_onnxruntime):\n&amp;gt;       compare_between_iree_and_onnxruntime(\n            model_url=&amp;quot;https://github.com/onnx/models/raw/main/validated/vision/classification/efficientnet-lite4/model/efficientnet-lite4-11.onnx&amp;quot;,\n            artifacts_subdir=&amp;quot;vision/classification&amp;quot;,\n        )\n\ntests\\vision\\classification_models_test.py:37: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\nconftest.py:231: in compare_between_iree_and_onnxruntime_fn\n    iree_module_path = compile_mlir_with_iree(\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nmlir_path = WindowsPath(&amp;#x27;D:/dev/projects/iree-test-suites/onnx_models/artifacts/vision/classification/efficientnet-lite4-11_version17.mlir&amp;#x27;)\nconfig_name = &amp;#x27;cpu&amp;#x27;, compile_flags = [&amp;#x27;--iree-hal-target-backends=llvm-cpu&amp;#x27;]\n\n    def compile_mlir_with_iree(mlir_path: Path, config_name: str, compile_flags: list[str]):\n        cwd = THIS_DIR\n        iree_module_path = mlir_path.with_name(mlir_path.stem + f&amp;quot;_{config_name}.vmfb&amp;quot;)\n        compile_args = [&amp;quot;iree-compile&amp;quot;, mlir_path.relative_to(cwd)]\n        compile_args.extend(compile_flags)\n        compile_args.extend([&amp;quot;-o&amp;quot;, iree_module_path.relative_to(cwd)])\n        compile_cmd = subprocess.list2cmdline(compile_args)\n        logger.info(\n            f&amp;quot;Launching compile command:\\n&amp;quot;  #\n            f&amp;quot;  cd {cwd} &amp;amp;&amp;amp; {compile_cmd}&amp;quot;\n        )\n        ret = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)\n        if ret.returncode != 0:\n            logger.error(f&amp;quot;Compilation of &amp;#x27;{iree_module_path}&amp;#x27; failed&amp;quot;)\n            logger.error(&amp;quot;iree-compile stdout:&amp;quot;)\n            logger.error(ret.stdout.decode(&amp;quot;utf-8&amp;quot;))\n            logger.error(&amp;quot;iree-compile stderr:&amp;quot;)\n            logger.error(ret.stderr.decode(&amp;quot;utf-8&amp;quot;))\n&amp;gt;           raise IreeCompileException(f&amp;quot;  &amp;#x27;{iree_module_path.name}&amp;#x27; compile failed&amp;quot;)\nE           onnx_models.utils.IreeCompileException:   &amp;#x27;efficientnet-lite4-11_version17_cpu.vmfb&amp;#x27; compile failed\n\nconftest.py:171: IreeCompileException\n\n------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\efficientnet-lite4-11.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\efficientnet-lite4-11_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\efficientnet-lite4-11_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\efficientnet-lite4-11_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\efficientnet-lite4-11_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\efficientnet-lite4-11_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\efficientnet-lite4-11_version17_cpu.vmfb\nERROR    onnx_models.conftest:conftest.py:166 Compilation of &amp;#x27;D:\\dev\\projects\\iree-test-suites\\onnx_models\\artifacts\\vision\\classification\\efficientnet-lite4-11_version17_cpu.vmfb&amp;#x27; failed\nERROR    onnx_models.conftest:conftest.py:167 iree-compile stdout:\nERROR    onnx_models.conftest:conftest.py:168 \nERROR    onnx_models.conftest:conftest.py:169 iree-compile stderr:\nERROR    onnx_models.conftest:conftest.py:170 artifacts\\vision\\classification\\efficientnet-lite4-11_version17.mlir:3:91: error: expected &amp;#x27;&amp;gt;&amp;#x27;\r\n    %0 = torch.operator &amp;quot;onnx.Constant&amp;quot;() {torch.onnx.value = dense_resource&amp;lt;_efficientnet-lite4_model_stem_conv2d_Conv2D_weights_fused_bn&amp;gt; : tensor&amp;lt;32x3x3x3xf32&amp;gt;} : () -&amp;gt; !torch.vtensor&amp;lt;[32,3,3,3],f32&amp;gt; \r\n                                                                                          ^\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_googlenet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_googlenet&#34;, &#34;duration&#34;: &#34;00:00:08&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_googlenet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:08&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\googlenet-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\googlenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\googlenet-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\googlenet-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\googlenet-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\googlenet-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\googlenet-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\googlenet-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\googlenet-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\googlenet-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_inception_v1&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_inception_v1&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_inception_v1&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;compare_between_iree_and_onnxruntime = &amp;lt;function compare_between_iree_and_onnxruntime_fn at 0x000001F6E071A980&amp;gt;\n\n    @pytest.mark.xfail(raises=IreeCompileException)\n    def test_inception_v1(compare_between_iree_and_onnxruntime):\n&amp;gt;       compare_between_iree_and_onnxruntime(\n            model_url=&amp;quot;https://github.com/onnx/models/raw/main/validated/vision/classification/inception_and_googlenet/inception_v1/model/inception-v1-12.onnx&amp;quot;,\n            artifacts_subdir=&amp;quot;vision/classification&amp;quot;,\n        )\n\ntests\\vision\\classification_models_test.py:52: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\nconftest.py:231: in compare_between_iree_and_onnxruntime_fn\n    iree_module_path = compile_mlir_with_iree(\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nmlir_path = WindowsPath(&amp;#x27;D:/dev/projects/iree-test-suites/onnx_models/artifacts/vision/classification/inception-v1-12_version17.mlir&amp;#x27;)\nconfig_name = &amp;#x27;cpu&amp;#x27;, compile_flags = [&amp;#x27;--iree-hal-target-backends=llvm-cpu&amp;#x27;]\n\n    def compile_mlir_with_iree(mlir_path: Path, config_name: str, compile_flags: list[str]):\n        cwd = THIS_DIR\n        iree_module_path = mlir_path.with_name(mlir_path.stem + f&amp;quot;_{config_name}.vmfb&amp;quot;)\n        compile_args = [&amp;quot;iree-compile&amp;quot;, mlir_path.relative_to(cwd)]\n        compile_args.extend(compile_flags)\n        compile_args.extend([&amp;quot;-o&amp;quot;, iree_module_path.relative_to(cwd)])\n        compile_cmd = subprocess.list2cmdline(compile_args)\n        logger.info(\n            f&amp;quot;Launching compile command:\\n&amp;quot;  #\n            f&amp;quot;  cd {cwd} &amp;amp;&amp;amp; {compile_cmd}&amp;quot;\n        )\n        ret = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)\n        if ret.returncode != 0:\n            logger.error(f&amp;quot;Compilation of &amp;#x27;{iree_module_path}&amp;#x27; failed&amp;quot;)\n            logger.error(&amp;quot;iree-compile stdout:&amp;quot;)\n            logger.error(ret.stdout.decode(&amp;quot;utf-8&amp;quot;))\n            logger.error(&amp;quot;iree-compile stderr:&amp;quot;)\n            logger.error(ret.stderr.decode(&amp;quot;utf-8&amp;quot;))\n&amp;gt;           raise IreeCompileException(f&amp;quot;  &amp;#x27;{iree_module_path.name}&amp;#x27; compile failed&amp;quot;)\nE           onnx_models.utils.IreeCompileException:   &amp;#x27;inception-v1-12_version17_cpu.vmfb&amp;#x27; compile failed\n\nconftest.py:171: IreeCompileException\n\n------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\inception-v1-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\inception-v1-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\inception-v1-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\inception-v1-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\inception-v1-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\inception-v1-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\inception-v1-12_version17_cpu.vmfb\nERROR    onnx_models.conftest:conftest.py:166 Compilation of &amp;#x27;D:\\dev\\projects\\iree-test-suites\\onnx_models\\artifacts\\vision\\classification\\inception-v1-12_version17_cpu.vmfb&amp;#x27; failed\nERROR    onnx_models.conftest:conftest.py:167 iree-compile stdout:\nERROR    onnx_models.conftest:conftest.py:168 \nERROR    onnx_models.conftest:conftest.py:169 iree-compile stderr:\nERROR    onnx_models.conftest:conftest.py:170 artifacts\\vision\\classification\\inception-v1-12_version17.mlir:261:12: error: failed to legalize operation &amp;#x27;torch.operator&amp;#x27; that was explicitly marked illegal\r\n    %257 = torch.operator &amp;quot;onnx.AveragePool&amp;quot;(%256) {torch.onnx.kernel_shape = [7 : si64, 7 : si64], torch.onnx.pads = [0 : si64, 0 : si64, 1 : si64, 1 : si64], torch.onnx.strides = [1 : si64, 1 : si64]} : (!torch.vtensor&amp;lt;[1,1024,6,6],f32&amp;gt;) -&amp;gt; !torch.vtensor&amp;lt;[1,1024,1,1],f32&amp;gt; \r\n           ^\r\nartifacts\\vision\\classification\\inception-v1-12_version17.mlir:261:12: note: see current operation: %1537 = &amp;quot;torch.operator&amp;quot;(%1536) &amp;lt;{name = &amp;quot;onnx.AveragePool&amp;quot;}&amp;gt; {torch.onnx.kernel_shape = [7 : si64, 7 : si64], torch.onnx.pads = [0 : si64, 0 : si64, 1 : si64, 1 : si64], torch.onnx.strides = [1 : si64, 1 : si64]} : (!torch.vtensor&amp;lt;[1,1024,6,6],f32&amp;gt;) -&amp;gt; !torch.vtensor&amp;lt;[1,1024,1,1],f32&amp;gt;\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_inception_v2&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_inception_v2&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_inception_v2&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\inception-v2-9.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\inception-v2-9_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\inception-v2-9_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\inception-v2-9_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\inception-v2-9_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\inception-v2-9_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\inception-v2-9_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\inception-v2-9_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\inception-v2-9_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\inception-v2-9_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_mnist&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_mnist&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_mnist&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\mnist-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\mnist-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\mnist-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\mnist-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\mnist-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\mnist-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\mnist-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\mnist-12_version17_cpu.vmfb --device=local-task --input=1x1x28x28xf32=@artifacts\\vision\\classification\\mnist-12_version17_input_0.bin --expected_output=1x10xf32=@artifacts\\vision\\classification\\mnist-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_mobilenet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_mobilenet&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_mobilenet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;compare_between_iree_and_onnxruntime = &amp;lt;function compare_between_iree_and_onnxruntime_fn at 0x000001F6E071A980&amp;gt;\n\n    @pytest.mark.xfail(raises=IreeRunException)\n    def test_mobilenet(compare_between_iree_and_onnxruntime):\n&amp;gt;       compare_between_iree_and_onnxruntime(\n            model_url=&amp;quot;https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx&amp;quot;,\n            artifacts_subdir=&amp;quot;vision/classification&amp;quot;,\n        )\n\ntests\\vision\\classification_models_test.py:74: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\nconftest.py:238: in compare_between_iree_and_onnxruntime_fn\n    run_iree_module(iree_module_path, run_flags)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\niree_module_path = WindowsPath(&amp;#x27;D:/dev/projects/iree-test-suites/onnx_models/artifacts/vision/classification/mobilenetv2-12_version17_cpu.vmfb&amp;#x27;)\nrun_flags = [&amp;#x27;--device=local-task&amp;#x27;, &amp;#x27;--input=1x3x224x224xf32=@artifacts\\\\vision\\\\classification\\\\mobilenetv2-12_version17_input_0.bin&amp;#x27;, &amp;#x27;--expected_output=1x1000xf32=@artifacts\\\\vision\\\\classification\\\\mobilenetv2-12_version17_output_0.bin&amp;#x27;]\n\n    def run_iree_module(iree_module_path: Path, run_flags: list[str]):\n        cwd = THIS_DIR\n        run_args = [&amp;quot;iree-run-module&amp;quot;, f&amp;quot;--module={iree_module_path.relative_to(cwd)}&amp;quot;]\n        run_args.extend(run_flags)\n        run_cmd = subprocess.list2cmdline(run_args)\n        logger.info(\n            f&amp;quot;Launching run command:\\n&amp;quot;  #\n            f&amp;quot;  cd {cwd} &amp;amp;&amp;amp; {run_cmd}&amp;quot;\n        )\n        ret = subprocess.run(run_cmd, shell=True, capture_output=True, cwd=cwd)\n        if ret.returncode != 0:\n            logger.error(f&amp;quot;Run of &amp;#x27;{iree_module_path}&amp;#x27; failed&amp;quot;)\n            logger.error(&amp;quot;iree-run-module stdout:&amp;quot;)\n            logger.error(ret.stdout.decode(&amp;quot;utf-8&amp;quot;))\n            logger.error(&amp;quot;iree-run-module stderr:&amp;quot;)\n            logger.error(ret.stderr.decode(&amp;quot;utf-8&amp;quot;))\n&amp;gt;           raise IreeRunException(f&amp;quot;  &amp;#x27;{iree_module_path.name}&amp;#x27; run failed&amp;quot;)\nE           onnx_models.utils.IreeRunException:   &amp;#x27;mobilenetv2-12_version17_cpu.vmfb&amp;#x27; run failed\n\nconftest.py:191: IreeRunException\n\n------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\mobilenetv2-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\mobilenetv2-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\mobilenetv2-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\mobilenetv2-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\mobilenetv2-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\mobilenetv2-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\mobilenetv2-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\mobilenetv2-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\mobilenetv2-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\mobilenetv2-12_version17_output_0.bin\nERROR    onnx_models.conftest:conftest.py:186 Run of &amp;#x27;D:\\dev\\projects\\iree-test-suites\\onnx_models\\artifacts\\vision\\classification\\mobilenetv2-12_version17_cpu.vmfb&amp;#x27; failed\nERROR    onnx_models.conftest:conftest.py:187 iree-run-module stdout:\nERROR    onnx_models.conftest:conftest.py:188 EXEC @torch-jit-export\r\n[FAILED] result[0]: element at index 0 (-4.60656) does not match the expected (-2.37464); expected that the view is equal to contents of a view of 1x1000xf32\r\n  expected:\r\n1x1000xf32=[-2.37464 0.935065 1.12219 0.706066 1.0206 0.694192 1.39349 -0.764078 -1.50313 -1.06135 -0.244745 1.39563 1.95494 1.09051 -0.18987 1.09404 2.02151 -0.842104 1.71547 0.0738969 0.026723 1.91793 2.13452 1.63657 0.229113 -1.2209 -0.34173 -0.267429 -1.65569 -2.1038 -1.67619 0.48997 -1.99155 0.329535 0.970639 -1.4066 -0.0848797 -0.394539 0.561562 -0.54557 0.416807 -0.225453 0.889287 -0.333584 1.24044 -0.0288806 0.750938 -1.75035 -1.01906 -0.862428 1.17125 -1.97379 0.922794 0.28352 0.187118 -0.220623 -0.332976 -1.50404 0.704507 0.0521138 0.721346 -0.643167 -1.27274 -2.04714 -1.00017 1.86712 0.786112 0.632549 0.594559 1.07325 -0.100008 1.34306 -0.865269 0.998923 -0.508074 1.58352 0.0132228 0.415638 3.00851 2.9473 0.640604 0.30715 0.355147 1.07739 0.39539 1.38059 0.243763 1.95928 -0.425658 0.886939 -0.820256 1.29597 2.52656 1.53383 2.8866 -2.36115 1.61395 -1.15406 0.489189 1.76225 0.216778 -3.3086 -1.00064 0.550362 -1.32111 -2.12347 -1.85457 1.10575 -2.47782 0.372394 -0.396076 4.17353 1.9391 0.486235 1.7688 -1.87771 -2.69531 -0.293505 -0.190097 -1.55165 0.155845 -2.68928 -2.19399 -2.19952 -0.758248 -0.638383 0.224477 1.30113 1.56858 -0.101465 -1.36575 -1.23296 0.392708 0.872346 -0.174546 -0.276914 -0.793372 0.601452 1.19444 0.527674 0.404132 1.60692 -0.0594482 0.285834 1.05639 0.111527 1.71883 1.25589 0.156283 -1.4348 -0.538956 0.567522 -2.44877 0.0121907 0.634538 -0.494328 -2.16077 -1.63343 -0.872367 -1.12735 -1.50949 -0.44042 0.528056 -0.629823 -0.468628 -1.68688 -1.1843 -3.65143 -0.648737 -1.62289 -1.65014 0.643684 -0.654259 -0.0694835 -0.601294 -2.18377 -2.47157 -2.07567 -0.202762 -0.0374158 -0.811133 -0.265905 -0.804735 -1.27855 -0.971022 -0.627785 -0.61533 0.116719 -2.65885 0.691673 -1.1668 -0.199187 0.0306093 -0.118466 -1.87228 1.34664 -0.453168 -2.2612 -2.70508 -0.211999 -1.51594 -0.390218 0.54882 0.723236 0.034201 -2.21782 -1.4484 -1.04083 -0.177264 0.964198 -0.168578 0.10118 -0.160334 -1.35436 -1.22683 -0.211982 -1.59133 0.665101 -1.53546 -0.645474 -3.07794 -0.353861 -2.87664 0.0720205 -2.82415 -0.0499499 -2.01538 -0.431282 -2.25864 -0.400134 -1.18754 -1.53791 -0.905746 -3.09971 -0.732288 -0.743324 -0.640477 -0.0677264 -0.334986 -1.416 -1.70424 -1.85333 0.0528649 -0.513094 -3.62062 2.1606 -1.41539 -1.53935 -0.809069 -0.819464 -0.435314 0.317527 -2.04825 -0.282746 0.851747 -4.45596 -1.23159 -1.64535 -0.189489 -0.0378779 -1.6397 -1.65959 -2.96107 0.790139 0.170005 0.751374 0.382836 -1.68394 -1.62647 -4.16471 -2.62111 -4.05723 -0.639815 -0.258592 -2.48687 -1.50477 0.319095 -0.879044 -1.85379 -0.592573 -1.38228 1.24972 1.47925 0.701458 1.81766 1.72018 -3.52872 -1.56356 -2.31173 -2.56346 -4.09632 -2.36539 -2.9672 -1.08311 -2.51256 -1.75979 -1.02299 -3.45069 0.223398 -0.561941 -1.24513 1.93886 0.706525 1.13714 -0.162685 -0.555195 0.623556 0.762993 2.38859 -0.0379475 2.78443 0.71289 0.610733 2.36698 2.08402 1.86362 1.16803 0.744087 1.9809 1.05295 0.705019 -1.72361 -2.61246 -0.90154 -2.19057 -1.23885 -0.0491769 1.05429 -0.528365 -0.922679 0.156235 0.00806147 -0.0141457 -0.605977 -1.23075 -1.25314 -1.33564 -0.780538 -1.16237 -3.07119 -2.04395 -4.64625 -3.92751 -2.85983 -2.84991 -3.20602 -2.61661 -1.9935 -2.49222 -2.32969 -1.3895 -1.00073 -2.4911 -1.27932 -0.612737 -1.53864 1.90447 0.213238 -0.290252 0.878737 -2.11527 1.32125 -1.10453 1.05684 -1.48746 -3.49492 -3.54294 -1.47979 -2.64947 -3.51932 -3.82589 -4.42998 -2.24421 -1.47675 -2.46377 -3.58576 -1.80016 -1.1588 -2.6798 -3.93799 -2.19237 -2.61469 -2.24775 -2.07227 -3.72128 -3.37078 -1.47362 -3.59704 -2.63287 -1.5866 -1.3373 0.00777143 -1.46594 -1.42905 -2.25728 0.26056 -1.07782 0.79314 0.0264692 0.774421 -1.87968 -1.24751 1.3871 0.0247149 0.865753 1.95688 -1.07979 -0.551027 -1.87415 1.92543 -2.31735 1.38743 2.71984 0.118329 1.08128 -2.19241 -0.362349 1.74885 4.79508 1.59181 1.28205 0.788038 -1.65139 -2.37664 -2.60883 -1.27904 2.79592 -1.12016 -1.52177 0.487265 -0.561363 -0.579197 1.93739 1.76233 1.50194 0.97816 -0.905608 1.36611 1.2219 -1.69367 1.79994 1.63351 0.18889 3.01763 -1.26088 -0.265335 4.73519 0.0229666 0.04173 -1.29624 -2.21975 2.51101 -0.536116 1.29367 -2.55145 2.84098 0.328006 1.24131 2.63667 0.806423 2.08426 0.192834 2.86241 1.31814 0.583307 -0.666822 -2.63887 -4.19322 0.612563 -1.05984 2.03286 -0.936803 -0.210166 2.96972 1.04097 0.455563 -4.06224 -0.671385 3.50766 -0.981801 2.91888 0.614349 0.414545 -1.67445 0.894877 1.5967 -0.37766 2.36062 2.83663 -0.989873 2.09044 -0.25339 1.40117 1.30866 0.44363 1.75893 1.42307 -1.01484 0.0760217 2.00696 -1.86765 0.0753396 -1.78064 1.15937 1.85949 1.70701 -0.811018 1.98918 2.07563 -3.55361 1.01293 -1.22326 3.09631 0.557973 0.450902 1.36533 0.401999 2.32629 -0.238684 0.430586 1.43975 1.58983 -1.85941 1.15659 -0.0626681 -1.34492 0.839324 0.640302 1.15173 0.148143 1.77323 0.307608 0.453135 1.25841 4.32456 -3.36331 0.054745 -1.42618 1.99068 2.85474 2.38738 0.219025 2.37214 -0.20334 -0.0652787 1.6281 0.676184 -3.3315 0.0445275 4.96519 -1.03562 0.583252 0.95002 2.56137 1.50681 -0.980065 2.94996 2.50938 0.984579 2.7242 -0.928959 -0.153866 1.2444 3.08813 -1.86571 0.0865739 -0.750791 1.68412 -0.348837 -2.78116 0.0020393 -1.18029 2.2264 -3.13995 1.48477 -3.45274 -2.27591 -0.253419 0.36123 -1.11485 -1.96888 0.653552 -3.99804 1.01141 2.18637 1.72548 -1.40863 3.10517 3.27615 1.9588 -0.76166 2.38901 1.38025 -0.1052 -1.29658 -2.26545 1.86242 1.15731 1.32093 0.400784 4.48609 -0.0336058 -0.035255 -4.60853 0.953535 1.55222 2.91791 -0.290518 0.821133 -3.32348 3.08451 2.39447 -1.50082 2.20778 -0.540298 -0.39802 2.27623 0.617162 4.11867 3.54364 3.35369 -2.88463 2.14772 4.46024 0.0681758 1.49335 2.70867 -2.23271 1.49935 1.84735 -0.336978 1.31909 1.48633 1.53524 -3.99659 1.36333 0.788281 1.34565 0.627815 0.247502 2.52435 -0.840964 0.173718 0.374241 3.90999 -1.08828 0.221413 1.37477 1.81879 -0.0971877 1.73297 2.51179 -0.484251 -0.290206 -2.16344 1.63653 -2.20521 3.34785 -0.106877 1.6813 -1.02058 -3.27306 2.80194 -2.2451 1.97965 -0.560288 -0.719111 0.785273 0.198648 0.389884 -0.933721 -3.47956 -1.2505 2.86084 1.31943 -1.97471 -0.82564 3.12249 0.131954 3.22886 0.862527 4.37362 1.86439 1.41675 -0.241971 -1.27371 0.099059 -2.44484 0.0641092 -0.992521 -5.11022 -0.481113 0.732071 1.78679 -2.49812 1.38883 3.48473 0.443149 -1.70473 0.0196481 3.01776 3.65249 -0.246202 -2.71528 0.285221 -1.88364 -0.331562 1.18144 0.689465 1.94939 1.51229 2.99084 0.692169 1.82454 2.31146 -0.0869046 0.794584 -2.15107 1.74313 0.25308 2.65028 2.47237 3.38061 0.866639 0.540538 2.59781 -0.84812 1.2187 0.824539 1.16047 -2.09574 2.44078 -0.938851 2.99649 -2.68756 1.22031 1.05518 2.19968 1.53855 -3.9337 1.97473 0.4838 1.58146 -1.05458 3.10044 1.04166 1.18433 -0.802981 1.00266 2.7575 1.26788 -2.64556 1.16351 2.63627 1.11238 -0.409698 -0.682432 -2.44003 -0.184994 0.396899 4.76174 2.69898 -2.43325 2.34982 1.3966 1.05356 -3.58451 3.02952 -0.493763 3.62428 -0.407906 2.96004 2.84788 2.30668 0.366206 -1.20173 0.251587 2.83923 0.722592 -1.09114 0.458374 -1.61839 2.8351 3.93374 4.12882 0.39063 1.57131 0.274628 -1.98853 3.32106 0.292347 0.642918 0.750355 2.15296 3.05414 1.10805 0.57783 1.00786 1.07535 3.10962 -2.80218 1.17331 -1.07717 -0.441623 3.77648 0.20434 0.425712 -0.578361 0.297413 1.00597 -0.0500323 1.83445 2.85218 3.17839 0.568775 0.871053 1.30973 -2.08738 2.03698 -1.26639 -3.38088 -0.976975 -1.56049 0.56566 1.02188 -2.05009 1.13571 -0.20986 3.36831 -1.83645 -0.292201 0.7261 -1.22202 1.21153 1.02433 0.0338449 0.0710252 1.1745 0.155503 -1.34638 1.44167 1.20962 0.541731 -1.07147 4.89845 4.3788 2.5889 -1.03185 0.0991537 1.59388 0.211358 3.38574 2.5282 -1.65925 -1.11815 2.26305 -4.29943 -1.28424 1.3712 1.65877 -2.7726 2.55316 1.05695 -0.816258 -2.40853 -3.19548 -2.57344 -1.64296 3.04874 1.40044 -0.784387 -0.643249 2.3585 -0.0874704 -4.64261 -0.365381 1.15957 -1.50132 -1.33052 2.54528 0.220316 -0.698471 2.23804 2.55011 -0.190632 1.52197 -0.587498 -1.27789 -2.15451 0.83839 -3.16689 1.66268 5.56339 1.47678 3.55399 1.4501 2.3307 2.4826 2.56002 2.47746 1.95229 0.67256 1.99285 0.641488 3.50584 1.65412 0.552469 1.5758 2.32156 0.960767 2.73072 1.71525 -1.53506 1.43962 -0.235452 -2.43669 0.143304 -1.22071 1.23635 1.1665 1.69374 3.10298 1.01777 -1.41887 -2.16003 -0.0645694 -3.06716 -1.30079 -0.634914 1.17458 -2.23924 -2.2396 -0.47649 -0.627476 -1.42406 -0.443803 -2.40281 -0.53473 -1.8665 -0.0320415 -1.43651 -1.84107 -0.95023 -1.01471 -3.68415 -0.340423 -2.78731 -2.50605 0.784416 -0.448743 0.846646 1.15173 -1.23277 0.885755 0.952362 -1.94996 -2.18503 -0.996136 -0.109356 -1.76878 -0.588702 1.19333 -1.38463 -0.722777 -1.33614 -2.98411 2.66951 1.60543 2.86517 -0.589026 -1.51086 2.1988 -0.529038 -1.0696 0.110545 1.95098 1.87113 3.77186 2.50662 -2.2266 -0.00377259 -1.07327 -1.42776 0.956749 -0.341643 -0.762504 -2.8564 -1.64321 -0.44081 0.158972 -0.979337 -2.65747 -3.26848 -3.4871 -4.55082 -2.43545 -3.61076 -2.61333 -1.57523 2.97539]\r\n  actual:\r\n1x1000xf32=[-4.60656 -8.1441 -2.10544 -0.68838 3.02923 2.26089 5.87445 -4.79483 -8.68874 -7.20715 -5.65666 -13.0482 -3.73024 -10.2447 -6.56367 -2.59616 -4.74459 -7.68423 -5.72708 -2.09652 -14.7443 -8.24815 -12.3914 -8.10987 -4.31293 -6.89966 -8.83692 -9.60965 -6.55793 -6.78196 -5.22366 -2.34467 2.12237 6.84269 6.52093 3.66542 4.25878 2.03464 -4.48382 -0.64532 -7.97371 -1.64565 -6.39791 -1.58791 -3.15505 0.400089 -6.59059 -7.12909 -7.2202 -8.47574 -2.49583 -6.95152 -0.68873 -3.09547 -3.74005 -3.68406 8.50506 -3.18823 -2.95364 -1.22424 -1.0864 4.55821 1.37035 3.82908 -7.32727 -1.36036 0.480166 -2.17835 -1.61319 -2.35953 -5.74228 2.6954 -3.04009 -2.24122 -5.10413 3.80552 6.33368 4.90597 1.78882 -5.0997 -14.0034 -4.47274 -5.02222 -4.00594 -13.2585 3.83334 -4.10056 -3.65289 -0.801648 -1.46772 -8.87842 -1.76818 -3.61155 -2.08424 1.3972 3.91832 -2.57008 -7.60201 -2.62506 -5.39001 -10.6926 -11.7445 -6.55451 0.25823 -4.08188 0.626894 5.57376 4.36899 -5.05259 -9.28261 -7.96974 -3.50552 6.238 -3.6888 -6.89983 -4.60179 -9.62349 4.68382 3.88688 1.50441 0.322165 -3.4157 0.456749 -5.32585 3.80794 -1.57465 -7.47764 -12.0928 -12.4462 -1.74671 -6.64426 -11.0319 -4.68971 -11.8298 -6.1099 -5.30599 -15.5182 -13.2445 -4.8126 -2.08993 -7.37922 -11.1022 -10.3536 -13.6432 -5.2591 -4.28073 -10.4369 -8.97604 -3.3694 -4.09271 3.05302 7.81716 17.1084 6.14906 17.6006 13.9949 18.6829 7.06649 10.222 2.38538 0.140566 9.811 12.7255 7.94088 8.84964 6.91646 8.59127 8.25533 4.75195 3.19456 2.1308 3.70115 2.93895 4.68032 3.59335 3.34748 0.108778 0.561511 5.57852 8.88272 10.7623 3.95764 13.0973 5.43958 9.75849 4.73151 1.24976 11.5511 10.8304 7.40182 11.7607 7.15991 9.63326 5.37615 11.5261 15.3837 8.85447 8.79253 12.2191 5.92248 1.73502 8.67554 11.8527 7.69122 7.94346 0.391033 -4.46138 4.46518 6.17384 0.0756665 5.05066 2.60586 8.67408 6.0483 9.38151 6.69151 10.1013 8.44992 9.10144 12.7448 9.79466 -1.50934 2.37023 3.49286 -1.03899 6.95116 3.29933 0.492185 1.04787 -0.300184 -0.568207 2.35755 0.146379 3.81711 11.3696 0.32782 2.20105 6.60358 16.207 14.2648 10.8885 12.5115 20.6131 11.3795 3.35465 22.2888 4.62701 10.8478 0.577135 -1.47127 3.58283 10.4612 17.4518 7.47943 21.7866 3.18381 4.92628 2.30925 -1.36975 3.75936 7.43294 2.63628 25.1247 2.18176 8.93398 5.53588 4.279 -0.817711 0.735177 0.11806 1.16191 2.43892 5.02272 0.161383 -3.31707 -9.23412 -8.21613 3.18999 0.338479 -1.13068 4.02855 2.45603 -0.490903 7.14525 6.50122 0.778426 -6.45105 4.31247 -6.91903 -7.6829 -1.35729 -5.24376 -0.0228617 -4.47296 -7.67307 -10.1119 -1.66555 -4.85274 -4.51655 2.50864 -6.3008 -0.717656 -6.39223 1.29113 1.40493 -5.62675 3.8569 -5.51922 -4.18179 2.58362 -4.7452 -7.27916 -7.66756 -3.11197 2.52839 -6.69933 -3.85174 -3.07082 -12.4937 1.82137 -7.76822 0.0130466 0.157017 -0.274548 -0.454713 -5.29972 -2.21684 0.393867 -5.80022 -7.10814 12.5776 11.5032 5.83894 3.16509 1.86801 2.40887 4.24967 0.393766 12.796 -5.90746 -6.1748 1.81556 -4.24603 -5.59509 -8.69113 -4.07515 -10.617 -9.06464 -3.13443 -5.24558 -8.31737 -11.9813 -8.7948 -3.14273 -6.66726 -4.73035 8.97011 3.60047 10.0873 8.65299 -3.58755 0.815683 7.60199 0.227548 2.25708 -0.057822 -3.15548 1.23698 4.3554 2.33208 0.283846 3.51762 -2.18921 0.421987 -2.78833 -1.14421 -11.0343 5.40608 7.54447 3.38178 6.27654 0.0658683 -0.0660485 -2.46488 0.277726 -4.56312 -9.91853 1.09293 -1.68122 -1.84073 -2.14903 1.58655 -12.1071 -9.97337 -0.0576474 -2.05685 -5.95313 -3.758 -5.31683 -0.935873 -5.99062 0.0926326 -1.09028 -9.60648 -7.92508 -7.48531 -5.20027 -3.04888 -4.33835 -0.493051 -10.5026 8.03543 -0.271616 7.60329 8.87249 1.57339 6.78689 -2.98773 1.27879 8.23057 6.659 -3.15606 6.35079 3.26176 -4.35461 -5.98195 -5.48343 -4.27808 0.0778548 6.27439 2.30711 -2.1921 9.05054 2.90347 12.5529 5.39043 0.850682 -5.16788 4.92499 -0.332659 8.4263 7.20081 -6.56811 2.02321 -9.07943 9.17888 -3.9128 0.886397 -0.525342 -7.83274 -0.139953 8.84653 -0.4422 -7.683 -0.255196 7.46179 4.42911 6.00049 -10.5128 14.2474 -8.94798 1.90012 -2.58296 9.81552 10.5058 4.41037 -0.389771 -1.06054 -4.64202 -3.62954 1.43175 -6.10109 -1.24426 12.8103 -3.47944 -6.77465 -13.0757 4.20677 6.74885 -1.57981 -1.84689 -0.999746 1.15699 -9.86059 1.05269 -4.14758 -1.22605 5.60636 -3.38788 -3.25506 -4.56662 12.7365 -4.04312 -4.76907 -7.62292 -5.09972 3.46215 -3.87697 -7.90904 6.4121 -10.3478 -3.20867 13.8502 2.55682 0.208419 2.98219 -2.61515 2.83687 -2.02307 -2.88061 -7.69037 -0.527585 8.38532 4.51328 13.1602 3.60491 -3.85084 -4.07102 0.567649 -0.660736 -1.53687 2.40543 5.63204 2.61331 -1.10869 -10.1929 -4.18217 -5.67304 -1.32311 11.3715 -2.63526 5.65149 0.878354 -3.18648 1.02701 1.11737 -7.61961 -7.16678 -8.50791 -2.15358 -7.19305 6.15288 -0.815586 13.6313 4.62983 -2.66579 6.39585 -2.03292 -7.9044 -3.13898 -1.03835 4.08502 4.42594 -1.04393 -11.2985 -4.40558 -4.50455 -5.68275 0.84093 4.6549 7.40997 -0.629274 -11.7668 2.14478 -1.51493 -1.06848 -0.102742 1.52681 -2.41175 -3.64599 6.99401 -0.269406 -5.35767 -10.0343 11.8865 -1.61782 -9.77421 -2.29984 3.7685 -14.4496 0.270654 -3.35803 2.0646 2.53805 2.36687 7.46808 -3.23005 2.08639 5.82792 11.8991 -2.82064 3.46728 -7.93686 4.36884 -7.57604 -3.87795 6.92778 7.29402 -8.95401 -5.5397 -0.552565 1.94136 5.08414 -6.26719 -3.59694 3.8743 6.52935 -4.83827 11.4942 -6.62998 10.0029 -0.792016 -0.802718 -5.2805 1.50266 13.4419 -3.25724 1.81339 -0.908065 -1.35896 -2.61769 0.426289 -3.27808 4.03748 -3.67244 -8.79217 5.7738 -1.81715 -5.39187 1.21911 13.0406 3.38505 1.52356 0.769526 -8.12341 5.35251 4.93063 -2.70441 5.91088 3.96369 -4.04974 7.35256 -7.9254 6.86084 -3.14627 -7.70457 -1.79871 11.4128 -4.82918 -9.89184 1.08503 2.36937 -0.397629 -1.06722 -4.21809 10.0563 -1.4238 2.76414 0.8808 0.0663868 1.81272 -14.6166 -6.72203 -5.3926 -3.59863 0.755343 -3.87865 -0.128006 -8.04794 2.5398 0.96435 0.256462 -1.32557 1.23013 9.113 0.721892 14.7784 -1.76115 0.0125493 -4.9786 7.26121 -4.51467 -10.1968 3.98036 7.62135 -5.24005 0.637042 -16.7076 -4.79052 3.51877 -11.9979 3.05754 7.57829 -3.67786 -6.87258 -0.103321 6.47104 13.2583 -13.9789 2.10488 12.1453 -7.28215 4.24207 -7.80867 1.31307 -1.94904 -3.58384 0.933835 -4.73343 0.802421 8.58729 3.44888 3.31987 -4.22646 4.20659 0.620615 -6.72971 -5.65636 -7.66715 3.20984 3.11716 3.39102 9.96529 -4.17526 -4.61767 5.57511 -2.68203 -9.37334 11.2504 -1.15808 -7.94343 1.41312 -2.18204 7.89964 -6.42963 -0.792945 5.46426 9.60044 -2.09215 -5.89383 1.24173 -4.9089 -3.66533 -1.28555 2.69119 0.531587 -8.98735 3.23181 6.97681 -6.56494 1.93875 -2.55158 6.2289 -6.21809 -11.6814 -10.4748 -4.55827 12.077 7.52592 2.91338 3.91041 6.10873 0.1883 3.62772 7.12556 -1.72409 0.88305 3.95398 0.0170678 1.52009 9.5069 -6.69129 4.53717 2.51147 16.6627 7.74355 1.16433 7.15275 -2.27623 -0.0746417 -2.69913 -3.86876 -6.7129 -1.95485 4.9247 -1.11199 3.59808 -4.36382 11.0306 -0.935079 9.90866 6.61748 5.90723 8.79136 4.58391 0.103053 1.82255 7.98011 1.35001 1.62736 -1.90781 8.07315 -15.9916 -14.015 1.51868 11.3401 1.86707 -3.11761 0.0185933 0.387347 -7.24646 3.7595 11.4206 6.81145 -7.56479 -5.8684 -0.00820676 -3.62937 -0.412409 3.88665 -4.23062 -11.2845 -0.0400152 -0.165636 -1.75628 -5.86477 5.49539 1.73832 -0.566148 -5.61352 0.857479 -0.0112274 -11.5986 -9.01871 5.82993 -5.67203 8.4215 9.04889 5.14416 -11.1967 2.43565 7.11311 10.4751 -4.1976 -6.26991 1.3545 -0.780467 -0.606218 -1.41259 -1.04241 5.0245 -0.44018 6.55132 -9.08613 -1.93211 -3.68337 -5.70993 -5.43534 -13.7178 6.90654 -1.46577 6.03995 1.30104 8.34882 -4.5213 1.42291 -4.98834 -2.36341 4.07468 0.954429 2.2141 -1.62424 -0.733268 -8.91514 1.27697 4.48095 4.10771 -1.80487 -7.28605 1.81296 8.84267 -12.9839 12.5757 4.16032 -8.44836 3.57636 3.36468 -4.82728 -9.40284 2.34587 13.9818 1.90911 -3.45107 2.50422 -6.09778 -4.5341 2.59153 2.70382 7.15859 4.38806 -6.89438 2.11388 2.57641 4.41355 3.33032 -6.77629 0.899692 -1.6816 -9.33631 1.81412 -0.2539 -3.29583 -7.91771 -5.12519 -5.57961 1.69715 -5.57884 5.67814 -1.51406 4.57874 1.48017 1.96705 -3.06903 0.402252 -3.34549 -5.52208 -2.79287 4.02229 1.30747 4.44771 -6.97086 -1.11433 -0.602158 -0.985376 1.83319 1.23234 -0.863716 1.76232 4.45647 -4.33004 -5.64305 -5.71623 -3.81728 -3.84481 -5.28141 -3.92766 -7.65544 0.843719 2.26773 3.68022 3.42819 -1.09112 0.537407 -2.66809 -1.0095 -3.07501 5.50131 0.591621 -7.56878 -10.9018 -1.9663 -0.863654 2.53705 -6.59795 -7.90386 -1.21936 0.404558 -3.17883 1.75471 -3.15493 5.53454 -6.68863 -4.08678 -0.180038 -1.93418 0.584748 -5.14336 1.54842 0.295553 -1.59002 0.0578546 3.70855 -1.42367 -1.97949 -3.09413 2.60068 -7.00407 3.9873 2.28845 -3.19204 4.02692 -1.56196 3.6703 0.5 4.95551 6.98388 -1.06087 0.287924 5.58921 12.782]\r\n\nERROR    onnx_models.conftest:conftest.py:189 iree-run-module stderr:\nERROR    onnx_models.conftest:conftest.py:190\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_rcnn_ilsvrc13&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_rcnn_ilsvrc13&#34;, &#34;duration&#34;: &#34;00:00:06&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_rcnn_ilsvrc13&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:06&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;compare_between_iree_and_onnxruntime = &amp;lt;function compare_between_iree_and_onnxruntime_fn at 0x000001F6E071A980&amp;gt;\n\n    @pytest.mark.xfail(raises=IreeCompileException)\n    def test_rcnn_ilsvrc13(compare_between_iree_and_onnxruntime):\n&amp;gt;       compare_between_iree_and_onnxruntime(\n            model_url=&amp;quot;https://github.com/onnx/models/raw/main/validated/vision/classification/rcnn_ilsvrc13/model/rcnn-ilsvrc13-9.onnx&amp;quot;,\n            artifacts_subdir=&amp;quot;vision/classification&amp;quot;,\n        )\n\ntests\\vision\\classification_models_test.py:82: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\nconftest.py:231: in compare_between_iree_and_onnxruntime_fn\n    iree_module_path = compile_mlir_with_iree(\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nmlir_path = WindowsPath(&amp;#x27;D:/dev/projects/iree-test-suites/onnx_models/artifacts/vision/classification/rcnn-ilsvrc13-9_version17.mlir&amp;#x27;)\nconfig_name = &amp;#x27;cpu&amp;#x27;, compile_flags = [&amp;#x27;--iree-hal-target-backends=llvm-cpu&amp;#x27;]\n\n    def compile_mlir_with_iree(mlir_path: Path, config_name: str, compile_flags: list[str]):\n        cwd = THIS_DIR\n        iree_module_path = mlir_path.with_name(mlir_path.stem + f&amp;quot;_{config_name}.vmfb&amp;quot;)\n        compile_args = [&amp;quot;iree-compile&amp;quot;, mlir_path.relative_to(cwd)]\n        compile_args.extend(compile_flags)\n        compile_args.extend([&amp;quot;-o&amp;quot;, iree_module_path.relative_to(cwd)])\n        compile_cmd = subprocess.list2cmdline(compile_args)\n        logger.info(\n            f&amp;quot;Launching compile command:\\n&amp;quot;  #\n            f&amp;quot;  cd {cwd} &amp;amp;&amp;amp; {compile_cmd}&amp;quot;\n        )\n        ret = subprocess.run(compile_cmd, shell=True, capture_output=True, cwd=cwd)\n        if ret.returncode != 0:\n            logger.error(f&amp;quot;Compilation of &amp;#x27;{iree_module_path}&amp;#x27; failed&amp;quot;)\n            logger.error(&amp;quot;iree-compile stdout:&amp;quot;)\n            logger.error(ret.stdout.decode(&amp;quot;utf-8&amp;quot;))\n            logger.error(&amp;quot;iree-compile stderr:&amp;quot;)\n            logger.error(ret.stderr.decode(&amp;quot;utf-8&amp;quot;))\n&amp;gt;           raise IreeCompileException(f&amp;quot;  &amp;#x27;{iree_module_path.name}&amp;#x27; compile failed&amp;quot;)\nE           onnx_models.utils.IreeCompileException:   &amp;#x27;rcnn-ilsvrc13-9_version17_cpu.vmfb&amp;#x27; compile failed\n\nconftest.py:171: IreeCompileException\n\n------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\rcnn-ilsvrc13-9.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17_cpu.vmfb\nERROR    onnx_models.conftest:conftest.py:166 Compilation of &amp;#x27;D:\\dev\\projects\\iree-test-suites\\onnx_models\\artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17_cpu.vmfb&amp;#x27; failed\nERROR    onnx_models.conftest:conftest.py:167 iree-compile stdout:\nERROR    onnx_models.conftest:conftest.py:168 \nERROR    onnx_models.conftest:conftest.py:169 iree-compile stderr:\nERROR    onnx_models.conftest:conftest.py:170 artifacts\\vision\\classification\\rcnn-ilsvrc13-9_version17.mlir:13:82: error: expected &amp;#x27;&amp;gt;&amp;#x27;\r\n    %10 = torch.operator &amp;quot;onnx.Constant&amp;quot;() {torch.onnx.value = dense_resource&amp;lt;_fc-rcnn_b_0&amp;gt; : tensor&amp;lt;200xf32&amp;gt;} : () -&amp;gt; !torch.vtensor&amp;lt;[200],f32&amp;gt; \r\n                                                                                 ^\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_resnet50_v1&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_resnet50_v1&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_resnet50_v1&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\resnet50-v1-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\resnet50-v1-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\resnet50-v1-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\resnet50-v1-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\resnet50-v1-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\resnet50-v1-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\resnet50-v1-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\resnet50-v1-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\resnet50-v1-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\resnet50-v1-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_resnet50_v2&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_resnet50_v2&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_resnet50_v2&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\resnet50-v2-7.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\resnet50-v2-7_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\resnet50-v2-7_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\resnet50-v2-7_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\resnet50-v2-7_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\resnet50-v2-7_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\resnet50-v2-7_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\resnet50-v2-7_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\resnet50-v2-7_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\resnet50-v2-7_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_shufflenet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_shufflenet&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_shufflenet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\shufflenet-9.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\shufflenet-9_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\shufflenet-9_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\shufflenet-9_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\shufflenet-9_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\shufflenet-9_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\shufflenet-9_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\shufflenet-9_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\shufflenet-9_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\shufflenet-9_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_shufflenet_v2&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_shufflenet_v2&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_shufflenet_v2&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\shufflenet-v2-12.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\shufflenet-v2-12_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\shufflenet-v2-12_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\shufflenet-v2-12_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\shufflenet-v2-12_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\shufflenet-v2-12_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\shufflenet-v2-12_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\shufflenet-v2-12_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\shufflenet-v2-12_version17_input_0.bin --expected_output=1x1000xf32=@artifacts\\vision\\classification\\shufflenet-v2-12_version17_output_0.bin\n\n&#34;}], &#34;tests/vision/classification_models_test.py::test_squeezenet&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/vision/classification_models_test.py::test_squeezenet&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/vision/classification_models_test.py::test_squeezenet&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     onnx_models.utils:utils.py:125 Upgrading &amp;#x27;artifacts\\vision\\classification\\squeezenet1.0-9.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\squeezenet1.0-9_version17.onnx&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:86 Getting model metadata for &amp;#x27;artifacts\\vision\\classification\\squeezenet1.0-9_version17.onnx&amp;#x27;\nINFO     onnx_models.utils:utils.py:135 Importing &amp;#x27;artifacts\\vision\\classification\\squeezenet1.0-9_version17.onnx&amp;#x27; to &amp;#x27;artifacts\\vision\\classification\\squeezenet1.0-9_version17.mlir&amp;#x27;\nINFO     onnx_models.conftest:conftest.py:160 Launching compile command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-compile artifacts\\vision\\classification\\squeezenet1.0-9_version17.mlir --iree-hal-target-backends=llvm-cpu -o artifacts\\vision\\classification\\squeezenet1.0-9_version17_cpu.vmfb\nINFO     onnx_models.conftest:conftest.py:180 Launching run command:\n  cd D:\\dev\\projects\\iree-test-suites\\onnx_models &amp;amp;&amp;amp; iree-run-module --module=artifacts\\vision\\classification\\squeezenet1.0-9_version17_cpu.vmfb --device=local-task --input=1x3x224x224xf32=@artifacts\\vision\\classification\\squeezenet1.0-9_version17_input_0.bin --expected_output=1x1000x1x1xf32=@artifacts\\vision\\classification\\squeezenet1.0-9_version17_output_0.bin\n\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > td')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > td')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+</html>
