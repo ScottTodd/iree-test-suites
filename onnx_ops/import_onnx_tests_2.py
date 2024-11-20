@@ -60,6 +60,13 @@ def onnx_op_test_case(
         source=onnx_model,
     )
 
+    # TODO(scotttodd): WORKING HERE
+    #   * loop over files in the onnx test folder, telling the build system about them
+    #   * allocate files in the output directory for those files
+    #   * write those files
+    #   * write the run_module_io_flags.txt file
+    #   * return all allocated file paths
+
     # TODO(scotttodd): input_[0-9]+.bin
     # TODO(scotttodd): output_[0-9]+.bin
     # TODO(scotttodd): run_module_io_flags.txt
