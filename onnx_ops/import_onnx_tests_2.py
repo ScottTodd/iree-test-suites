@@ -28,7 +28,7 @@ def onnx_op_test_case(
     *,
     name: str,
     source: BuildFileLike,
-) -> BuildFile:
+) -> list[BuildFileLike]:
     # This imports one 'test_[name]' subfolder from this:
     #
     #   test_[name]/
@@ -68,7 +68,7 @@ def onnx_op_test_case(
     # iree_input_0 = context.allocate_file()
 
     # ConvertInputsAndOutputs()
-    return name
+    return [name]
 
 
 class ConvertInputsAndOutputs(BuildAction):
@@ -144,7 +144,11 @@ def import_onnx_op_tests():
     # ]
 
     all_artifacts = []
-    all_artifacts.append(create_test_case(context, "test_add"))
+    all_artifacts.extend(create_test_case(context, "test_add"))
+    print("------------------------------")
+    print("all_artifacts:")
+    print(all_artifacts)
+    print("------------------------------")
     # all_artifacts.append(create_test_case(context, "mul"))
     return all_artifacts
 
