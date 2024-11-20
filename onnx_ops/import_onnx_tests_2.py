@@ -26,8 +26,8 @@ ONNX_NODE_TESTS_ROOT = ONNX_PACKAGE_DIR / "backend/test/data/node"
 
 def onnx_op_test_case(
     *,
-    name: str,
-    source: BuildFileLike,
+    test_name: str,
+    source_folder: BuildFileLike,
 ) -> list[BuildFileLike]:
     # This imports one 'test_[name]' subfolder from this:
     #
@@ -48,11 +48,15 @@ def onnx_op_test_case(
 
     context = BuildContext.current()
 
+    source_folder_path = Path(source_folder.path)
+    imported_path_base = "onnx/node/generated/test_" + test_name
+
     # Import from .onnx to .mlir.
-    onnx_model_path = Path(source.path) / "model.onnx"
+    imported_mlir_path = imported_path_base + "/" + test_name + ".mlir"
+    onnx_model_path = source_folder_path / "model.onnx"
     onnx_model = context.allocate_file(str(onnx_model_path))
     onnx_import(
-        name=name,
+        name=imported_mlir_path,
         source=onnx_model,
     )
 
@@ -60,15 +64,15 @@ def onnx_op_test_case(
     # TODO(scotttodd): output_[0-9]+.bin
     # TODO(scotttodd): run_module_io_flags.txt
 
-    onnx_input_0_path = Path(source.path) / "test_data_set_0" / "onnx_input_0.pb"
+    onnx_input_0_path = source_folder_path / "test_data_set_0" / "onnx_input_0.pb"
     onnx_input_0 = context.allocate_file(str(onnx_input_0_path))
-    onnx_output_0_path = Path(source.path) / "test_data_set_0" / "onnx_output_0.pb"
+    onnx_output_0_path = source_folder_path / "test_data_set_0" / "onnx_output_0.pb"
     onnx_output_0 = context.allocate_file(str(onnx_output_0_path))
 
     # iree_input_0 = context.allocate_file()
 
     # ConvertInputsAndOutputs()
-    return [name]
+    return [imported_mlir_path]
 
 
 class ConvertInputsAndOutputs(BuildAction):
@@ -102,9 +106,9 @@ class ConvertInputsAndOutputs(BuildAction):
 def create_test_case(context, test_folder_name):
     # folder_name = "test_" + test_name
     test_name = test_folder_name[5:]  # Skip over the "test_" prefix.
-    imported_name = (
-        "onnx/node/generated/" + test_folder_name + "/" + test_name + ".mlir"
-    )
+    # imported_name = (
+    #     "onnx/node/generated/" + test_folder_name + "/" + test_name + ".mlir"
+    # )
 
     test_folder_path = Path(ONNX_NODE_TESTS_ROOT) / test_folder_name
     test_folder = context.allocate_file(str(test_folder_path))
@@ -115,7 +119,7 @@ def create_test_case(context, test_folder_name):
     #     name=imported_name,
     #     source=onnx_file,
     # )
-    return onnx_op_test_case(name=imported_name, source=test_folder)
+    return onnx_op_test_case(test_name=test_name, source_folder=test_folder)
 
     # return imported_name
 
