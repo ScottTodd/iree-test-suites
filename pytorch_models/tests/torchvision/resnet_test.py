@@ -16,4 +16,5 @@ def test_resnet50(pytorch_import_and_iree_compile):
     from torchvision.models import resnet50, ResNet50_Weights
 
     model = resnet50(weights=ResNet50_Weights.DEFAULT)
-    pytorch_import_and_iree_compile(model)
+    input = torch.randn((1, 3, 224, 224), dtype=torch.float32)
+    pytorch_import_and_iree_compile(model, (input,))
