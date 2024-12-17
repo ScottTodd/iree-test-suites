@@ -7,8 +7,10 @@ pytest-reportlog
 pytest-timeout
 pytest-xdist
 
-# https://pytorch.org/get-started/locally/
-#   First check the CPU index, then fallback to standard PyPI.
+transformers
+
+# PyTorch, following instructions at https://pytorch.org/get-started/locally/.
+# First check the CPU index, then fallback to standard PyPI.
 --index-url https://download.pytorch.org/whl/cpu
 --extra-index-url https://pypi.org/simple
 torch
