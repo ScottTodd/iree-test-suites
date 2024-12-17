@@ -1,0 +1,16 @@
+# Baseline requirements for running the test suite.
+#   * See requirements-iree.txt for using IREE packages.
+
+pytest
+pytest-html
+pytest-reportlog
+pytest-timeout
+pytest-xdist
+
+# https://pytorch.org/get-started/locally/
+#   First check the CPU index, then fallback to standard PyPI.
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+torch
+torchvision
+torchaudio
