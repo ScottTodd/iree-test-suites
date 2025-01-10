@@ -4,12 +4,12 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import json
 import logging
 import os
 import pyjson5
 import pytest
 import subprocess
+import time
 import urllib.request
 from dataclasses import dataclass
 from onnxruntime import InferenceSession, SessionOptions
@@ -277,7 +277,21 @@ def compare_between_iree_and_onnxruntime(pytestconfig):
         # TODO(scotttodd): overwrite if already existing? check SHA?
         onnx_path = test_artifacts_dir / f"{model_name}.onnx"
         if not onnx_path.exists():
-            urllib.request.urlretrieve(model_url, onnx_path)
+            logger.info(f"Downloading model from: {model_url}")
+            remaining_download_tries = 3
+            while remaining_download_tries > 0:
+                try:
+                    urllib.request.urlretrieve(model_url, onnx_path)
+                except Exception as e:
+                    logger.warning(
+                        f"Download failed with '{e}', {remaining_download_tries} attempts left."
+                    )
+                    remaining_download_tries = remaining_download_tries - 1
+                    if remaining_download_tries == 0:
+                        raise e
+                    time.sleep(1.0)
+                else:
+                    break
 
         # TODO(scotttodd): cache ONNX metadata and runtime results (pickle?)
         onnx_model_metadata = get_onnx_model_metadata(onnx_path)
